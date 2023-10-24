@@ -19,6 +19,7 @@ const userSchema = new Schema({
     validator: Validator.default.isEmail,
   },
   password: { type: String, required: true, maxLength: 20, minLength: 8 },
+  role: { type: String, default: "user" ,required:true},
 });
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
@@ -26,7 +27,6 @@ userSchema.pre("save", async function (next) {
   }
   const cryptedPassword = await bcrypt.hash(this.password, 10);
   this.password = cryptedPassword;
- 
 });
 userSchema.methods.jwtTokenGenrator = function () {
   const jwtToken = jwt.sign({ id: this._id }, process.env.secretKey);
