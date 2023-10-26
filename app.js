@@ -3,6 +3,7 @@ const dotenv = require("dotenv");
 const auth = require("./routers/auth");
 const user=require("./routers//user")
 const content=require("./routers/content")
+const watchList=require("./routers/watchList")
 const bodyParser=require("body-parser")
 const cookieParser = require("cookie-parser");
 const { errorHandler } = require("./error/error");
@@ -13,6 +14,7 @@ app.use(bodyParser.json())
 app.use(auth);
 app.use(user)
 app.use(content)
+app.use(watchList)
 dotenv.config({ path: "./config/config.env" });
 app.use(errorHandler);
 module.exports = app;

@@ -18,7 +18,7 @@ const userSchema = new Schema({
     unique: [true, "this email id already use try again"],
     validator: Validator.default.isEmail,
   },
-  password: { type: String, required: true, maxLength: 20, minLength: 8 },
+  password: { type: String, required: true, minLength: 8 },
   role: { type: String, default: "user" ,required:true},
 });
 userSchema.pre("save", async function (next) {
@@ -36,4 +36,5 @@ userSchema.methods.validPassword = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
 
+userSchema.virtual
 module.exports = mongoose.model("user", userSchema);
