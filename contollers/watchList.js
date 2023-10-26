@@ -70,6 +70,7 @@ exports.getAllWatchListContent = async (req, res, next) => {
     if (!allWatchListConent) {
       return next(new handlingError("no contents", 404));
     }
+    
     return res
       .status(200)
       .json({ success: true, data: allWatchListConent.contentsId });
