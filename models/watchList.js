@@ -7,15 +7,15 @@ const watchListSchema = Schema({
     required: true,
     ref: "user",
   },
-  
+
   contentsId: [
-    
-     { contentId: {
+    {
+      contentId: {
         type: mongoose.Schema.ObjectId,
         required: true,
         ref: "content",
-      }},
-    
+      },
+    },
   ],
 });
 

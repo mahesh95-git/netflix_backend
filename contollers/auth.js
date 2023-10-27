@@ -159,6 +159,7 @@ exports.changePasswrod = async (req, res, next) => {
     const verifyUser = jwt.verify(req.params.token, process.env.secretKey);
 
     const User = await user.findById(verifyUser._id);
+
     if (!User) {
       return next(new handlingError("Token Expired", 403));
     }
@@ -171,6 +172,21 @@ exports.changePasswrod = async (req, res, next) => {
       .status(201)
       .json({ success: true, message: "your password successfylly change" });
   } catch (error) {
+    return next(new handlingError("Token Expired", 403));
+  }
+};
+
+exports.checkAdminUser = async (req, res, next) => {
+  try {
+    const userId = req.User._id;
+    const adminUser = await user.findOne({ _id: userId });
+    console.log(adminUser.role);
+    if (adminUser.role === "user") {
+      return next(new handlingError("you are not admin", 403));
+    }
+    return next();
+  } catch (error) {
+    console.log(error.message);
     return next(new handlingError("Token Expired", 403));
   }
 };

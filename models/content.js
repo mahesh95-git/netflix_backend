@@ -72,6 +72,8 @@ const ContentSchema = Schema({
         type: String,
         required: [true, "Please provide a Genre"],
         required: true,
+        
+        
       },
     },
   ],
