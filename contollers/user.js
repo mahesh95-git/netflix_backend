@@ -44,3 +44,36 @@ exports.deleteUserAccount = async (req, res, next) => {
     return next(new handlingError("internal server error try again ", 500));
   }
 };
+
+// admin controller
+exports.adminGetAllUsers = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    const allUser = await user.find().skip(skip).limit(limit);
+    if (!allUser) {
+      return next(new handlingError("no users found", 404));
+    }
+    return res
+      .status(201)
+      .json({ success: true, count: allUser.length, data: allUser });
+  } catch (err) {
+    return next(new handlingError("Internal Server Error Try Again ", 500));
+  }
+};
+
+exports.adminDeleteUser = async (req, res, next) => {
+  try {
+    console.log("e")
+    const deleteUserId = await user.findOneAndRemove({ _id: req.params.id });
+    if (!deleteUserId) {
+      return next(new handlingError("invalid id", 401));
+    }
+    return res
+      .status(201)
+      .json({ success: true, message: "user has been deleted" });
+  } catch (err) {
+    return next(new handlingError("Internal Server Error Try Again ", 500));
+  }
+};

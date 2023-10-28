@@ -5,6 +5,7 @@ const user=require("./routers//user")
 const content=require("./routers/content")
 const watchList=require("./routers/watchList")
 const bodyParser=require("body-parser")
+const catAndLan=require("./routers/categorieAndLanguage")
 const cookieParser = require("cookie-parser");
 const { errorHandler } = require("./error/error");
 const app = express();
@@ -15,6 +16,7 @@ app.use(auth);
 app.use(user)
 app.use(content)
 app.use(watchList)
+app.use(catAndLan)
 dotenv.config({ path: "./config/config.env" });
 app.use(errorHandler);
 module.exports = app;

@@ -5,16 +5,13 @@ class handlingError extends Error {
   }
 }
 const errorHandler = (error, req, res, next) => {
-  if(error.message="E11000 duplicate key error collection"){
-    return res.status(409).json({success:false,message:" already exist"})
-  }
+  error.message || "interanl server error"
+  error.statusCode || 500;
   if (error) {
+    console.log(error.message)
     return res
       .status(error.statusCode)
       .json({ success: false, error: error.message });
-  } else {
-
-    return res.status(500).send("An unknown error occurred");
-  }
+  } 
 };
 module.exports = {handlingError,errorHandler};

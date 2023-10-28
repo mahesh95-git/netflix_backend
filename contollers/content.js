@@ -1,7 +1,5 @@
-const { query } = require("express");
 const { handlingError } = require("../error/error");
 const content = require("../models/content");
-const { validationResult } = require("express-validator");
 exports.addNewContent = async (req, res, next) => {
   try {
     const newContent = await content.create({
@@ -189,4 +187,3 @@ exports.filterContent = async (req, res, next) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
