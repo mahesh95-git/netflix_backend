@@ -41,7 +41,7 @@ exports.addWatchList = async (req, res, next) => {
 exports.removeWatchlist = async (req, res, next) => {
   try {
     const WatchList = await watchList.findOne({ userId: req.User.id });
-    console.log(WatchList);
+
     if (!WatchList) {
       return next(new handlingError("No Content Found", 404));
     }
@@ -49,7 +49,7 @@ exports.removeWatchlist = async (req, res, next) => {
     const index = WatchList.contentsId.findIndex((value) => {
       return String(value.contentId) === String(req.params.id);
     });
-    console.log(index);
+
     if (index < 0) {
       return next(new handlingError("Content not found", 404));
     }

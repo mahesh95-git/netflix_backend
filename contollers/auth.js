@@ -148,7 +148,6 @@ exports.forgotPassword = async (req, res, next) => {
     main().catch(console.error);
     return res.status(201).json({ success: true, message: "check your email" });
   } catch (err) {
-    console.log(err.message);
 
     return next(new handlingError("Internal Server Error", 500));
   }
@@ -180,13 +179,13 @@ exports.checkAdminUser = async (req, res, next) => {
   try {
     const userId = req.User._id;
     const adminUser = await user.findOne({ _id: userId });
-    console.log(adminUser.role);
+
     if (adminUser.role === "user") {
       return next(new handlingError("you are not admin", 403));
     }
     return next();
   } catch (error) {
-    console.log(error.message);
+
     return next(new handlingError("Token Expired", 403));
   }
 };

@@ -3,9 +3,9 @@ const { genre, language } = require("../models/categorieAndLanguage");
 genre;
 exports.addGenreOrLanguage = async (req, res, next) => {
   try {
-    console.log(req.query.genre);
+
     if (req.query.genre) {
-      console.log("ne");
+
       await genre.create({ genre: req.query.genre });
       return res
         .status(201)
@@ -19,7 +19,7 @@ exports.addGenreOrLanguage = async (req, res, next) => {
       return next(new handlingError("Bad Request", 400));
     }
   } catch (error) {
-    console.log(error.message);
+  
     return next(new handlingError(error.message, 500));
   }
 };
@@ -30,7 +30,7 @@ exports.getAllGenreOrLanguage = async (req, res, next) => {
       if (!genres) {
         return next(new handlingError("Not Found", 404));
       }
-      console.log(genres);
+    
       return res.status(200).json({ success: true, data: genres });
     } else if (req.query.q === "language") {
       const languages = await language.find();
@@ -42,7 +42,7 @@ exports.getAllGenreOrLanguage = async (req, res, next) => {
       return next(new handlingError("Bad Request", 400));
     }
   } catch (err) {
-    console.log(err.message);
+
     return next(new handlingError("Internal Server Error", 500));
   }
 };
@@ -58,7 +58,7 @@ exports.deleteGenre = async (req, res, next) => {
       .status(200)
       .send({ success: true, message: "deleted Successfully" });
   } catch (err) {
-    console.log(err.message);
+   
     return next(new handlingError("Internal Server Error", 500));
   }
 };
@@ -75,7 +75,7 @@ exports.deletelanguage = async (req, res, next) => {
       .status(200)
       .send({ success: true, message: "deleted Successfully" });
   } catch (error) {
-    console.log(error.message);
+
     return next(new handlingError("Internal Server Error", 500));
   }
 };

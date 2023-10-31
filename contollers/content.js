@@ -8,7 +8,7 @@ exports.addNewContent = async (req, res, next) => {
     });
     res.status(201).json({ message: "new Content added", data: newContent });
   } catch (error) {
-    console.log(error.message);
+  
     return next(new handlingError(error.message, 500));
   }
 };
@@ -26,7 +26,7 @@ exports.updateContent = async (req, res, next) => {
       .status(201)
       .json({ suceess: true, message: "content is update  successefully " });
   } catch (error) {
-    console.log(error.message);
+    
     return next(new handlingError("internal server error try again", 500));
   }
 };
@@ -41,7 +41,7 @@ exports.deleteContent = async (req, res, next) => {
       .status(200)
       .send({ sucess: true, message: "content deleted successfully" });
   } catch (error) {
-    console.log(error.message);
+
     return next(new handlingError("internal server error try again", 500));
   }
 };
@@ -53,7 +53,7 @@ exports.getContent = async (req, res, next) => {
     }
     res.status(200).json({ suceess: true, data: Contents });
   } catch (err) {
-    console.log(err.message);
+
     return next(
       new handlingError("Internal Server Error Try Again Later", 500)
     );
@@ -82,7 +82,7 @@ exports.getAllSectionViseContent = async (req, res, next) => {
       AllContent,
     });
   } catch (error) {
-    console.log(error.message);
+ 
     return next(
       new handlingError("Internal Server Error Try Again Later", 500)
     );
@@ -102,7 +102,7 @@ exports.getContentOverview = async (req, res, next) => {
 
     return res.status(201).json({ sucess: true, Content });
   } catch (error) {
-    console.log(error.message);
+ 
     return next(
       new handlingError("Internal Server Error Try Again Later", 500)
     );
@@ -134,7 +134,7 @@ exports.recommendationContent = async (req, res, next) => {
 
     res.status(200).json({ suceess: true, data: recommendationContents });
   } catch (error) {
-    console.error(error.message);
+  
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -159,7 +159,7 @@ exports.searchContent = async (req, res, next) => {
       .sort("createdAt");
     return res.status(200).json({ success: true, data: contents });
   } catch (error) {
-    console.error(error.message);
+  
 
     res.status(500).json({ message: "Internal Server Error" });
   }
@@ -183,7 +183,7 @@ exports.filterContent = async (req, res, next) => {
     }
     return res.status(200).json({ success: true, data: Content });
   } catch (error) {
-    console.error(error.message);
+  
     res.status(500).json({ message: "Internal Server Error" });
   }
 };

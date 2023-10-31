@@ -8,7 +8,7 @@ const errorHandler = (error, req, res, next) => {
   error.message || "interanl server error"
   error.statusCode || 500;
   if (error) {
-    console.log(error.message)
+   
     return res
       .status(error.statusCode)
       .json({ success: false, error: error.message });

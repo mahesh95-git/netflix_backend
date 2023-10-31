@@ -11,7 +11,9 @@ exports.getUserInfo = async (req, res, next) => {
     }
     res.status(201).json({ suceess: true, data: loginUser });
   } catch (error) {
-    console.log("Error in getting the info", error);
+  
+ 
+    next(new handlingError("Internal Server Error",500));
   }
 };
 exports.updateUserInfo = async (req, res, next) => {
@@ -30,7 +32,7 @@ exports.updateUserInfo = async (req, res, next) => {
 
 exports.deleteUserAccount = async (req, res, next) => {
   try {
-    console.log(typeof req.params.id);
+
     const deletedUser = await user.findByIdAndDelete(req.params.id);
 
     if (!deletedUser) {
@@ -40,7 +42,7 @@ exports.deleteUserAccount = async (req, res, next) => {
       .status(201)
       .json({ success: true, message: "your accout successfully deleted" });
   } catch (err) {
-    console.log(err.message);
+ 
     return next(new handlingError("internal server error try again ", 500));
   }
 };
@@ -65,7 +67,7 @@ exports.adminGetAllUsers = async (req, res, next) => {
 
 exports.adminDeleteUser = async (req, res, next) => {
   try {
-    console.log("e")
+
     const deleteUserId = await user.findOneAndRemove({ _id: req.params.id });
     if (!deleteUserId) {
       return next(new handlingError("invalid id", 401));
