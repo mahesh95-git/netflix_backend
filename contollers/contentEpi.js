@@ -67,43 +67,23 @@ exports.addContentEpi = async (req, res, next) => {
       .status(201)
       .json({ suceess: true, message: "successfully added" });
   } catch (error) {
-<<<<<<< HEAD
+
     return next(new handlingError(error.message, 500));
-=======
+
     return next(new handlingError(error.message, 501));
->>>>>>> 38a1879b4f61c2e35ae8e2c2fd50bb66b69d5211
+
   }
 };
 exports.getAllContentEpi = async (req, res, next) => {
   try {
     const contentId = new mongoose.Types.ObjectId(req.params.id);
-<<<<<<< HEAD
 
     const allEpi = await contentEpi
       .findOne({ contentId: req.params.id })
       .select("-addedBy -contentId")
       .sort({ "allContent.episodeNumber": 1 });
     
-=======
-    console.log(contentId);
-    const allEpi = await contentEpi.aggregate([
-      { $match: { _id: contentId } },
-      {
-        $unwind: "$allContents",
-      },
-      {
-        $sort: { "allContents.episodeNumber": 1 },
-      },
-      {
-        $group: {
-          _id: "$_id",
-          allContents: {
-            $push: "$allContents",
-          },
-        },
-      },
-    ]);
->>>>>>> 38a1879b4f61c2e35ae8e2c2fd50bb66b69d5211
+
 
     if (!allEpi) {
       return next(
@@ -114,15 +94,11 @@ exports.getAllContentEpi = async (req, res, next) => {
       );
     }
 
-<<<<<<< HEAD
+
     return res.status(201).json({ suceess: true, data: allEpi });
   } catch (error) {
 
-=======
-    return res.status(201).json({ suceess: true, data: allEpi[0].allContents });
-  } catch (error) {
-    console.log(error.message);
->>>>>>> 38a1879b4f61c2e35ae8e2c2fd50bb66b69d5211
+
     return next(new handlingError("interanl server error", 500));
   }
 };
