@@ -26,3 +26,8 @@ app.use("/api",contentEpi)
 app.use(errorHandler);
 module.exports = app;
 
+<<<<<<< HEAD
+=======
+
+//this is final commit
+>>>>>>> 38a1879b4f61c2e35ae8e2c2fd50bb66b69d5211
