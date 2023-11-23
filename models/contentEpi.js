@@ -28,6 +28,7 @@ const contentEpiSchema = Schema({
       episodeNumber: {
         type: Number,
         required: true,
+        unique:true
       },
       duration: {
         type: String,
@@ -45,6 +46,6 @@ const contentEpiSchema = Schema({
   ],
 });
 
-module.exports = mongoose.model("contentEpi", contentEpiSchema);
+module.exports = mongoose.model("contentEpisode", contentEpiSchema);
 
 

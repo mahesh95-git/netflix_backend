@@ -22,15 +22,32 @@ exports.addContentEpi = async (req, res, next) => {
       .status(201)
       .json({ suceess: true, message: "successfully added" });
   } catch (error) {
-
     return next(new handlingError(error.message, 501));
   }
 };
 
 exports.getAllContentEpi = async (req, res, next) => {
   try {
-    const contentId = req.params.id;
-    const allEpi = await contentEpi.findOne({ contentId: contentId });
+    const contentId = new mongoose.Types.ObjectId(req.params.id);
+    console.log(contentId);
+    const allEpi = await contentEpi.aggregate([
+      { $match: { _id: contentId } },
+      {
+        $unwind: "$allContents",
+      },
+      {
+        $sort: { "allContents.episodeNumber": 1 },
+      },
+      {
+        $group: {
+          _id: "$_id",
+          allContents: {
+            $push: "$allContents",
+          },
+        },
+      },
+    ]);
+
     if (!allEpi) {
       return next(
         new handlingError(
@@ -39,9 +56,10 @@ exports.getAllContentEpi = async (req, res, next) => {
         )
       );
     }
-    return res.status(201).json({ suceess: true, data: allEpi.allContents });
+
+    return res.status(201).json({ suceess: true, data: allEpi[0].allContents });
   } catch (error) {
-  
+    console.log(error.message);
     return next(new handlingError("interanl server error", 500));
   }
 };
@@ -68,7 +86,6 @@ exports.updateContentEpi = async (req, res, next) => {
       .status(201)
       .json({ suceess: true, message: "episode is update  successefully " });
   } catch (error) {
-  
     return next(new handlingError("internal server error try again", 500));
   }
 };
@@ -80,7 +97,7 @@ exports.deleteContentEpi = async (req, res, next) => {
       },
       { $pull: { allContents: { _id: req.params.episodeId } } }
     );
-   
+
     if (!Content) {
       return next(new handlingError("please enter a valid id", 401));
     }
@@ -88,7 +105,6 @@ exports.deleteContentEpi = async (req, res, next) => {
       .status(200)
       .send({ sucess: true, message: "content deleted successfully" });
   } catch (error) {
-   
     return next(new handlingError("internal server error try again", 500));
   }
 };
