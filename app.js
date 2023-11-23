@@ -7,18 +7,22 @@ const watchList=require("./routers/watchList")
 const contentEpi=require("./routers/contentEpic")
 const bodyParser=require("body-parser")
 const catAndLan=require("./routers/categorieAndLanguage")
+const cors=require("cors")
 const cookieParser = require("cookie-parser");
 const { errorHandler } = require("./error/error");
 const app = express();
+app.use(cors( {origin: 'http://localhost:5173', // Replace with your frontend origin
+credentials: true}))
 app.use(express.urlencoded({extended:false}));
 app.use(cookieParser());
 app.use(bodyParser.json())
-app.use(auth);
-app.use(user)
-app.use(content)
-app.use(watchList)
-app.use(catAndLan)
-app.use(contentEpi)
-dotenv.config({ path: "./config/config.env" });
+app.use("/api",auth);
+app.use("/api",user)
+app.use("/api",content)
+app.use("/api",watchList)
+app.use("/api",catAndLan)
+app.use("/api",contentEpi)
+
 app.use(errorHandler);
 module.exports = app;
+

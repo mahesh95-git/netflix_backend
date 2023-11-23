@@ -17,42 +17,69 @@ const ContentSchema = Schema({
     maxlength: 4,
     required: [true, "Please provide a Year"],
   },
-  banner: {
-    type: String,
-    required: [true, "Banner is required"],
-  },
-  image: { type: String, required: [true, "Plot is required"] },
-  rating: {
-    type: Number,
-    default: 0,
-
-    // enum:["G", "PG","R","NC-17"],
-  },
-  languages: [
+  banner: [
     {
-      language: {
+      url: {
         type: String,
-        required: [true, "Please provide movie language"],
+        required: true,
+      },
+      public_id: {
+        type: String,
+        required: true,
       },
     },
   ],
-  trailer: {
-    type: String,
-    unique: true,
-    required: [true, "Please provide movie trailer "],
-  },
-  fullMovie: {
-    unique: true,
-    type: String,
-    required: [true, "Please provide movie "],
-  },
+  poster: [
+    {
+      url: {
+        type: String,
+        required: true,
+      },
+      public_id: {
+        type: String,
+        required: true,
+      },
+    },
+  ],
+  languages: [
+    {
+      lnaguage: {
+        type: String,
+
+      },
+    },
+  ],
+  trailer: [
+    {
+      url: {
+        type: String,
+        required: true,
+      },
+      public_id: {
+        type: String,
+        required: true,
+      },
+    },
+  ],
+  fullMovie: [
+    {
+      url: {
+        type: String,
+        required: true,
+      },
+      public_id: {
+        type: String,
+        required: true,
+      },
+    },
+  ],
   duration: {
     type: Number,
     required: [true, "Please provide movie duration "],
   },
   type: {
     type: String,
-    required:true
+    required: true,
   },
   director: {
     name: { type: String },
@@ -62,18 +89,17 @@ const ContentSchema = Schema({
   },
   cast: [
     {
-      actorName: { type: String },
-      actorImage: { type: String },
+      name: {
+        type: String,
+        required: true,
+      },
     },
   ],
   genres: [
     {
       genre: {
         type: String,
-        required: [true, "Please provide a Genre"],
         required: true,
-        
-        
       },
     },
   ],
@@ -86,11 +112,10 @@ const ContentSchema = Schema({
     ref: "User",
     required: true,
   },
-  createdAt:{
-    type : Date ,
-    default : new Date()
-
-  }
+  createdAt: {
+    type: Date,
+    default: new Date(),
+  },
 });
 
 module.exports = mongoose.model("content", ContentSchema);

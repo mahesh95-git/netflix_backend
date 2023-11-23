@@ -7,14 +7,14 @@ const {
 const { authiticatedUser, checkAdminUser } = require("../contollers/auth");
 
 const router = require("express").Router();
-router.route("/api/genres-languages").get(getAllGenreOrLanguage);
+router.route("/genres-languages").get(getAllGenreOrLanguage);
 router
-  .route("/api/admin/genres-languages")
+  .route("/admin/genres-languages")
   .post(authiticatedUser, checkAdminUser, addGenreOrLanguage);
 router
-  .route("/api/admin/genres/:id")
+  .route("/admin/genres/:id")
   .delete(authiticatedUser, checkAdminUser, deleteGenre);
 router
-  .route("/api/admin/languages/:id")
+  .route("/admin/languages/:id")
   .delete(authiticatedUser, checkAdminUser, deletelanguage);
 module.exports = router;

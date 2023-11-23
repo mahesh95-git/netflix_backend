@@ -1,5 +1,7 @@
 const { handlingError } = require("../error/error");
 const user = require("../models/user");
+const { deleteContent } = require("../util/cloudinary");
+const { uploadContentCloudinary } = require("../util/cloudinary");
 exports.getUserInfo = async (req, res, next) => {
   try {
     const loginUser = await user.findOne(
@@ -11,28 +13,44 @@ exports.getUserInfo = async (req, res, next) => {
     }
     res.status(201).json({ suceess: true, data: loginUser });
   } catch (error) {
-  
- 
-    next(new handlingError("Internal Server Error",500));
+    next(new handlingError("Internal Server Error", 500));
   }
 };
 exports.updateUserInfo = async (req, res, next) => {
+  let cloudinaryData = {};
   try {
-    const tempUser = await user.findByIdAndUpdate(req.params.id, req.body, {
-      after: true,
+    if (req.files) {
+      cloudinaryData = await uploadContentCloudinary(req.files);
+    }
+    const userInfo = {
+      avatar: [
+        { url: cloudinaryData[0].url, public_id: cloudinaryData[0].public_id },
+      ],
+
+      ...req.body,
+    };
+
+    const tempUser = await user.findByIdAndUpdate(req.params.id, userInfo, {
+      new: false,
     });
     if (!tempUser) {
       return next(new handlingError("Please enter a valid User Id", 401));
     }
+    if (Object.keys(cloudinaryData).length > 0) {
+      
+      await deleteContent(tempUser.avatar[0].public_id);
+    }
     return res.status(201).json({ suceess: true, data: tempUser });
   } catch (error) {
+    if (cloudinaryData.public_id) {
+      await deleteContent(cloudinaryData.public_id);
+    }
     return next(new handlingError("internal server error try again ", 500));
   }
 };
 
 exports.deleteUserAccount = async (req, res, next) => {
   try {
-
     const deletedUser = await user.findByIdAndDelete(req.params.id);
 
     if (!deletedUser) {
@@ -42,7 +60,6 @@ exports.deleteUserAccount = async (req, res, next) => {
       .status(201)
       .json({ success: true, message: "your accout successfully deleted" });
   } catch (err) {
- 
     return next(new handlingError("internal server error try again ", 500));
   }
 };
@@ -67,7 +84,6 @@ exports.adminGetAllUsers = async (req, res, next) => {
 
 exports.adminDeleteUser = async (req, res, next) => {
   try {
-
     const deleteUserId = await user.findOneAndRemove({ _id: req.params.id });
     if (!deleteUserId) {
       return next(new handlingError("invalid id", 401));

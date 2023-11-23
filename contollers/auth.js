@@ -3,26 +3,49 @@ const user = require("../models/user");
 const jwt = require("jsonwebtoken");
 const bcrpyt = require("bcrypt");
 const nodemailer = require("nodemailer");
-exports.singup = async (req, res, next) => {
+const { uploadContentCloudinary } = require("../util/cloudinary");
+const { deleteContent } = require("../util/cloudinary");
+exports.signup = async (req, res, next) => {
+  let cloudinaryData = {};
   try {
-    const newUser = await user.create(req.body);
+    if (req.files) {
+      cloudinaryData = await uploadContentCloudinary(req.files);
+    }
+    const userInfo = {
+      avatar: [
+        {
+          url: cloudinaryData[0].url,
+          public_id: cloudinaryData[0].public_id,
+        },
+      ],
 
-    const token = newUser.jwtTokenGenrator();
+      ...req.body,
+    };
+   
+    const newUser = await user.create(userInfo);
+
+    const token = await newUser.jwtTokenGenrator();
     const options = {
       expires: new Date(
         Date.now() + process.env.COOKIE_EXPIRE * 24 * 60 * 60 * 1000
       ),
       httpOnly: true,
     };
-    return res.cookie("loginToken", token, options).status(201).json({
+
+    // Set the loginToken cookie in the response
+    res.cookie("loginToken", token, options).status(201).json({
       success: true,
-      message: "your accout successfully created",
+      message: "Your account was successfully created",
       data: newUser,
     });
   } catch (error) {
+    if (cloudinaryData.public_id) {
+      await deleteContent(cloudinaryData.public_id);
+    }
     return next(new handlingError(error.message, 500));
   }
 };
+
 exports.login = async (req, res, next) => {
   try {
     const User = await user.findOne({ email: req.body.email });
@@ -93,7 +116,7 @@ exports.resetPassword = async (req, res, next) => {
     const resetPass = await user.findById(req.User._id);
 
     if (!resetPass) {
-      throw new handlingError("Invalid Token", 403);
+      return next(new handlingError("Invalid Token", 403));
     }
     const temp = await bcrpyt.compare(req.body.newPassword, resetPass.password);
 
@@ -148,7 +171,6 @@ exports.forgotPassword = async (req, res, next) => {
     main().catch(console.error);
     return res.status(201).json({ success: true, message: "check your email" });
   } catch (err) {
-
     return next(new handlingError("Internal Server Error", 500));
   }
 };
@@ -185,7 +207,6 @@ exports.checkAdminUser = async (req, res, next) => {
     }
     return next();
   } catch (error) {
-
     return next(new handlingError("Token Expired", 403));
   }
 };

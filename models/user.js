@@ -6,6 +6,16 @@ const jwt = require("jsonwebtoken");
 const userSchema = new Schema({
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
+  avatar: [
+    {
+      url: {
+        type: String,
+        default:
+          "https://res.cloudinary.com/dyjmwxfb4/image/upload/v1700720301/user-profile-icon-front-side-with-white-background_187299-40010_xglyal.avif",
+      },
+      public_id:String
+    }
+  ],
   phone: {
     type: Number,
     required: true,
@@ -19,7 +29,7 @@ const userSchema = new Schema({
     validator: Validator.default.isEmail,
   },
   password: { type: String, required: true, minLength: 8 },
-  role: { type: String, default: "user" ,required:true},
+  role: { type: String, default: "user", required: true },
 });
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
@@ -36,5 +46,5 @@ userSchema.methods.validPassword = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
 
-userSchema.virtual
+userSchema.virtual;
 module.exports = mongoose.model("user", userSchema);

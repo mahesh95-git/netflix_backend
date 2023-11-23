@@ -1,39 +1,128 @@
+const { json } = require("express");
 const { handlingError } = require("../error/error");
 const content = require("../models/content");
+const {
+  uploadContentCloudinary,
+  deleteContent,
+} = require("../util/cloudinary");
+const { default: mongoose } = require("mongoose");
 exports.addNewContent = async (req, res, next) => {
   try {
+
+
+
+    if (!req.files || !req.body.contentInfo) {
+      return next(
+        new handlingError("Missing files or content information", 404)
+      );
+    }
+    //upload file in cloudinary
+
+    const cloudinaryData = await uploadContentCloudinary(req.files);
+
+    const {
+      title,
+      description,
+      year,
+      languages,
+      duration,
+      type,
+      director,
+      genres,
+      section,
+      cast,
+    } = JSON.parse(req.body.contentInfo);
+
+    const contentToCreate = {};
+
+    cloudinaryData.forEach((value) => {
+      contentToCreate[value.fieldname] = [
+        {
+          url: value.url,
+          public_id: value.public_id,
+        },
+      ];
+    });
+
     const newContent = await content.create({
-      createBy: req.User._id,
-      ...req.body,
+      createBy: new mongoose.Types.ObjectId("653a6bdc6dde8663336163cd"),
+      title: title,
+      description: description,
+      year: year,
+      languages: languages,
+      type: type,
+      duration: duration,
+      director: director,
+      genres: genres,
+      section: section,
+      cast: cast,
+      ...contentToCreate,
     });
     res.status(201).json({ message: "new Content added", data: newContent });
   } catch (error) {
-  
     return next(new handlingError(error.message, 500));
   }
 };
 
 exports.updateContent = async (req, res, next) => {
   try {
-    const Content = await content.findByIdAndUpdate(req.params.id, {
-      ...req.body,
-    });
+    let contentToCreate = {};
+    let temp = {};
+
+    if (req.files && Object.keys(req.files).length > 0) {
+      const cloudinaryData = await uploadContentCloudinary(req.files);
+
+      cloudinaryData.forEach((value) => {
+        contentToCreate[value.fieldname] = [
+          {
+            url: value.url,
+            public_id: value.public_id,
+          },
+        ];
+      });
+    }
+
+    temp = JSON.parse(req.body.contentInfo);
+
+    const updatedData = {
+      ...temp,
+      ...contentToCreate,
+    };
+
+    const Content = await content.findByIdAndUpdate(req.params.id, updatedData);
+
+    if (Object.keys(contentToCreate).length > 0) {
+      let deleteContentData = [];
+      for (const key in contentToCreate) {
+        if (Content[key]) {
+          deleteContentData.push(Content[key][0].public_id);
+        }
+      }
+
+      if (deleteContentData.length > 0) {
+        await deleteContent(deleteContentData);
+      }
+    }
 
     if (!Content) {
       return next(new handlingError("Please Enter valid Content Id", 401));
     }
+
     res
       .status(201)
-      .json({ suceess: true, message: "content is update  successefully " });
+      .json({ success: true, message: "Content updated successfully" });
   } catch (error) {
-    
-    return next(new handlingError("internal server error try again", 500));
+  
+    return next(
+      new handlingError("Internal server error, please try again", 500)
+    );
   }
 };
 
 exports.deleteContent = async (req, res, next) => {
   try {
     const Content = await content.findByIdAndDelete(req.params.id);
+    
     if (!Content) {
       return next(new handlingError("please enter a valid id", 401));
     }
@@ -41,7 +130,6 @@ exports.deleteContent = async (req, res, next) => {
       .status(200)
       .send({ sucess: true, message: "content deleted successfully" });
   } catch (error) {
-
     return next(new handlingError("internal server error try again", 500));
   }
 };
@@ -53,7 +141,6 @@ exports.getContent = async (req, res, next) => {
     }
     res.status(200).json({ suceess: true, data: Contents });
   } catch (err) {
-
     return next(
       new handlingError("Internal Server Error Try Again Later", 500)
     );
@@ -82,7 +169,6 @@ exports.getAllSectionViseContent = async (req, res, next) => {
       AllContent,
     });
   } catch (error) {
- 
     return next(
       new handlingError("Internal Server Error Try Again Later", 500)
     );
@@ -102,7 +188,6 @@ exports.getContentOverview = async (req, res, next) => {
 
     return res.status(201).json({ sucess: true, Content });
   } catch (error) {
- 
     return next(
       new handlingError("Internal Server Error Try Again Later", 500)
     );
@@ -134,7 +219,6 @@ exports.recommendationContent = async (req, res, next) => {
 
     res.status(200).json({ suceess: true, data: recommendationContents });
   } catch (error) {
-  
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -159,8 +243,6 @@ exports.searchContent = async (req, res, next) => {
       .sort("createdAt");
     return res.status(200).json({ success: true, data: contents });
   } catch (error) {
-  
-
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -183,7 +265,8 @@ exports.filterContent = async (req, res, next) => {
     }
     return res.status(200).json({ success: true, data: Content });
   } catch (error) {
-  
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+

@@ -1,6 +1,7 @@
 const express = require("express");
+const {upload}=require("../util/multerUpload")
 const {
-  singup,
+  signup,
   login,
   authiticatedUser,
   logout,
@@ -8,9 +9,9 @@ const {
 } = require("../contollers/auth");
 
 const router = express.Router();
-router.route("/api/auth/signup").post(singup);
-router.route("/api/auth/login").post(login);
-router.route("/api/auth/logout").get(authiticatedUser, logout);
-router.route("/api/auth/reset-password").patch(authiticatedUser,resetPassword)
+router.route("/auth/signup").post(upload.fields([{name:"avatar",maxCount:1}]),signup);
+router.route("/auth/login").post(login);
+router.route("/auth/logout").get(authiticatedUser, logout);
+router.route("/auth/reset-password").patch(authiticatedUser,resetPassword)
 
 module.exports = router;

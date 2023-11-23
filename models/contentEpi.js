@@ -17,10 +17,15 @@ const contentEpiSchema = Schema({
         type: String,
         required: true,
       },
-      image: {
-        type: String,
-        required: true,
-      },
+      poster: [
+        {
+          url: { type: String, required: true },
+          public_id: {
+            type: String,
+            required: true,
+          },
+        },
+      ],
       description: {
         type: String,
         required: true,
@@ -36,15 +41,19 @@ const contentEpiSchema = Schema({
       releaseDate: {
         type: Date,
         required: true,
-        default:Date.now()
+        default: Date.now(),
       },
-      videoURL: {
-        type: String,
-      },
+      fullVideo: [
+        {
+          url: { type: String, required: true },
+          public_id: {
+            type: String,
+            required: true,
+          },
+        },
+      ],
     },
   ],
 });
 
-module.exports = mongoose.model("contentEpi", contentEpiSchema);
-
-
+module.exports = mongoose.model("contentEpisode", contentEpiSchema);

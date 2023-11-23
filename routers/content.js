@@ -10,22 +10,24 @@ const {
   searchContent,
   filterContent,
 } = require("../contollers/content");
-
+const { upload } = require("../util/multerUpload");
+const field = upload.fields([
+  { name: "poster", maxCount: 1 },
+  { name: "banner", maxCount: 1 },
+  { name: "fullMovie", maxCount: 1 },
+  { name: "trailer", maxCount: 1 },
+]);
 const router = require("express").Router();
+router.route("/admin/content/create").post(field, addNewContent);
+router.route("/admin/content/:id/update").patch(field, updateContent);
 router
-  .route("/api/admin/content/create")
-  .post(authiticatedUser, checkAdminUser, addNewContent);
-router
-  .route("/api/admin/content/:id/update")
-  .patch(authiticatedUser, checkAdminUser, updateContent);
-router
-  .route("/api/admin/content/:id/delete")
+  .route("/admin/content/:id/delete")
   .delete(authiticatedUser, checkAdminUser, deleteContent);
-router.route("/api/content/:id").get(getContent);
-router.route("/api/content").get(getAllSectionViseContent);
-router.route("/api/contentOverview").get(getContentOverview);
-router.route("/api/recommendations/:id").get(recommendationContent);
-router.route("/api/search").get(searchContent);
-router.route("/api/filter").get(filterContent);
+router.route("/content/:id").get(getContent);
+router.route("/content").get(getAllSectionViseContent);
+router.route("/contentOverview").get(getContentOverview);
+router.route("/recommendations/:id").get(recommendationContent);
+router.route("/search").get(searchContent);
+router.route("/filter").get(filterContent);
 
 module.exports = router;

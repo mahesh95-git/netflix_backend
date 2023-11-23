@@ -4,16 +4,17 @@ const {
   getAllContentEpi,
   updateContentEpi,
   deleteContentEpi,
+  getSingleContentEpi,
 } = require("../contollers/contentEpi");
-
+const {upload}=require("../util/multerUpload")
 const router = require("express").Router();
 router
-  .route("/api/content-episode/:contentId/:episodeId")
-  .patch(authiticatedUser, checkAdminUser, updateContentEpi)
-  .delete(authiticatedUser, checkAdminUser,deleteContentEpi);
+  .route("/content-episode/:contentId/:episodeId")
+  .patch( authiticatedUser, checkAdminUser,upload.fields([{name:"fullVideo",maxCount:1},{name:"poster",maxCount:1}]),updateContentEpi)
+  .delete(authiticatedUser, checkAdminUser, deleteContentEpi).get(getSingleContentEpi);
 router
-  .route("/api/content-episode/:id")
-  .post(authiticatedUser, checkAdminUser, addContentEpi)
+  .route("/content-episode/:id")
+  .post(authiticatedUser, checkAdminUser,upload.fields([{name:"fullVideo",maxCount:1},{name:"poster",maxCount:1}]),addContentEpi)
   .get(getAllContentEpi);
 
 module.exports = router;
