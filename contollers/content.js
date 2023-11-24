@@ -1,4 +1,3 @@
-const { json } = require("express");
 const { handlingError } = require("../error/error");
 const content = require("../models/content");
 const {
@@ -8,9 +7,6 @@ const {
 const { default: mongoose } = require("mongoose");
 exports.addNewContent = async (req, res, next) => {
   try {
-
-
-
     if (!req.files || !req.body.contentInfo) {
       return next(
         new handlingError("Missing files or content information", 404)
@@ -45,7 +41,7 @@ exports.addNewContent = async (req, res, next) => {
     });
 
     const newContent = await content.create({
-      createBy: new mongoose.Types.ObjectId("653a6bdc6dde8663336163cd"),
+      createBy: req.User._id,
       title: title,
       description: description,
       year: year,
@@ -112,7 +108,6 @@ exports.updateContent = async (req, res, next) => {
       .status(201)
       .json({ success: true, message: "Content updated successfully" });
   } catch (error) {
-  
     return next(
       new handlingError("Internal server error, please try again", 500)
     );
@@ -122,7 +117,7 @@ exports.updateContent = async (req, res, next) => {
 exports.deleteContent = async (req, res, next) => {
   try {
     const Content = await content.findByIdAndDelete(req.params.id);
-    
+
     if (!Content) {
       return next(new handlingError("please enter a valid id", 401));
     }
@@ -268,5 +263,3 @@ exports.filterContent = async (req, res, next) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
-

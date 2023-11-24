@@ -1,4 +1,4 @@
-const { handlingError, errorHandler } = require("../error/error");
+const { handlingError } = require("../error/error");
 const user = require("../models/user");
 const jwt = require("jsonwebtoken");
 const bcrpyt = require("bcrypt");
@@ -8,20 +8,43 @@ const { deleteContent } = require("../util/cloudinary");
 exports.signup = async (req, res, next) => {
   let cloudinaryData = {};
   try {
-    if (req.files) {
-      cloudinaryData = await uploadContentCloudinary(req.files);
+    if (
+      [
+        req.body.email,
+        req.body.password,
+        req.body.phone,
+        req.body.firstName,
+      ].some((value) => value.length === 0)
+    ) {
+      return next(
+        new handlingError(
+          "firstName,email,phone number and password are required please provide valid details",
+          401
+        )
+      );
     }
-    const userInfo = {
-      avatar: [
-        {
-          url: cloudinaryData[0].url,
-          public_id: cloudinaryData[0].public_id,
-        },
-      ],
-
+    const toCheckUserisExist = await user.findOne({
+      $and: [{ email: req.body.email }, { phone: req.body.phone }],
+    });
+    if (toCheckUserisExist) {
+      return next(new handlingError("user already exist try again", 401));
+    }
+    let userInfo = {};
+    if (Object.keys(req.files).length !== 0) {
+      cloudinaryData = await uploadContentCloudinary(req.files);
+      userInfo = {
+        avatar: [
+          {
+            url: cloudinaryData[0].url,
+            public_id: cloudinaryData[0].public_id,
+          },
+        ],
+      };
+    }
+    userInfo = {
       ...req.body,
     };
-   
+
     const newUser = await user.create(userInfo);
 
     const token = await newUser.jwtTokenGenrator();
@@ -39,6 +62,7 @@ exports.signup = async (req, res, next) => {
       data: newUser,
     });
   } catch (error) {
+    console.log(error.message)
     if (cloudinaryData.public_id) {
       await deleteContent(cloudinaryData.public_id);
     }
@@ -48,6 +72,11 @@ exports.signup = async (req, res, next) => {
 
 exports.login = async (req, res, next) => {
   try {
+    if (
+      [req.body.email, req.body.password].some((value) => value.length === 0)
+    ) {
+      return next(new handlingError("email or password is required", 401));
+    }
     const User = await user.findOne({ email: req.body.email });
 
     if (!User) {

@@ -19,8 +19,7 @@ exports.addGenreOrLanguage = async (req, res, next) => {
       return next(new handlingError("Bad Request", 400));
     }
   } catch (error) {
-  
-    return next(new handlingError(error.message, 500));
+    return next(new handlingError(error.message, error.code));
   }
 };
 exports.getAllGenreOrLanguage = async (req, res, next) => {
@@ -30,7 +29,6 @@ exports.getAllGenreOrLanguage = async (req, res, next) => {
       if (!genres) {
         return next(new handlingError("Not Found", 404));
       }
-    
       return res.status(200).json({ success: true, data: genres });
     } else if (req.query.q === "language") {
       const languages = await language.find();
@@ -75,7 +73,6 @@ exports.deletelanguage = async (req, res, next) => {
       .status(200)
       .send({ success: true, message: "deleted Successfully" });
   } catch (error) {
-
     return next(new handlingError("Internal Server Error", 500));
   }
 };
