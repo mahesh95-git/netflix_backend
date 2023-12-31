@@ -4,7 +4,9 @@ const historySchema = Schema({
   userId: { type: mongoose.Types.ObjectId },
   activity: [
     {
-      contentId: { type: mongoose.Types.ObjectId },
+      content: { type: mongoose.Types.ObjectId,
+        ref:"content"
+     },
       duration: { type: Number, required: true },
       dateTime: {
         type: Date,

@@ -15,7 +15,7 @@ exports.addWatchHistory = async (req, res, next) => {
         userId: req.User._id,
         activity: [
           {
-            contentId: contentId,
+            content: contentId,
             duration: duration,
           },
         ],
@@ -25,10 +25,10 @@ exports.addWatchHistory = async (req, res, next) => {
       // If history exists, update the activity
       let isInList = false;
       for (let i = 0; i < userHistory.activity.length; i++) {
-        if (userHistory.activity[i].contentId == contentId) {
+        if (userHistory.activity[i].content == contentId) {
           userHistory.activity.splice(i, 1);
           userHistory.activity.push({
-            contentId: contentId,
+            content: contentId,
             duration: duration,
           });
           isInList = true;
@@ -36,7 +36,7 @@ exports.addWatchHistory = async (req, res, next) => {
       }
       if (!isInList) {
         userHistory.activity.push({
-          contentId: contentId,
+          content: contentId,
           duration: duration,
         });
       }
@@ -61,7 +61,7 @@ exports.deleteSingleHistoryContent = async (req, res, next) => {
     }
     const index = History.activity.indexOf(
       History.activity.filter(
-        (item) => item.contentId.toString() === req.params.id
+        (item) => item.content.toString() === req.params.id
       )[0]
     );
 
@@ -90,3 +90,17 @@ exports.deleteAllContentHistory = async (req, res, next) => {
     return next(new handlingError("internal server error", 500));
   }
 };
+
+exports.getAllWatchHistory=async(req,res,next)=>{
+    try{
+        const watchHistory=await history.findOne({userId:req.User._id}).populate("activity.content")
+           if(!watchHistory){
+            return next(new handlingError('this user has no watching record',400))
+           }
+           return res.status(200).json({success:true,data:watchHistory})
+        }catch(error){
+            console.log(error.message);
+    return next(new handlingError("internal server error", 500));
+        }
+
+}
