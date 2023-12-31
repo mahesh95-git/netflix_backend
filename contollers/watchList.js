@@ -8,7 +8,7 @@ exports.addWatchList = async (req, res, next) => {
     if (!WatchList) {
       let newWatchlist = {
         userId: req.User._id,
-        contentsId: [{ contentId: new mongoose.Types.ObjectId(req.params.id) }],
+        contentsId: [{ content: new mongoose.Types.ObjectId(req.params.id) }],
       };
 
       await watchList.create(newWatchlist);
@@ -18,7 +18,7 @@ exports.addWatchList = async (req, res, next) => {
     }
     let isExites = false;
     for (let i = 0; i < WatchList.contentsId.length; i++) {
-      if (WatchList.contentsId[i].contentId.toString() === req.params.id) {
+      if (WatchList.contentsId[i].content.toString() === req.params.id) {
         isExites = true;
       }
     }
@@ -27,13 +27,14 @@ exports.addWatchList = async (req, res, next) => {
       return next(new handlingError("already exites in your watchlist", 401));
     }
     WatchList.contentsId.push({
-      contentId: new mongoose.Types.ObjectId(req.params.id),
+      content: new mongoose.Types.ObjectId(req.params.id),
     });
     await WatchList.save();
     return res
       .status(201)
       .json({ success: true, message: "Added to your list" });
   } catch (error) {
+    console.log(error.message)
     return next(new handlingError("Internal Server Error", 500));
   }
 };
@@ -45,11 +46,10 @@ exports.removeWatchlist = async (req, res, next) => {
     if (!WatchList) {
       return next(new handlingError("No Content Found", 404));
     }
-
     const index = WatchList.contentsId.findIndex((value) => {
-      return String(value.contentId) === String(req.params.id);
+      return String(value.content) === String(req.params.id);
     });
-
+console.log(index)
     if (index < 0) {
       return next(new handlingError("Content not found", 404));
     }
@@ -65,15 +65,20 @@ exports.getAllWatchListContent = async (req, res, next) => {
   try {
     const allWatchListConent = await watchList
       .findOne({ userId: req.User.id })
-      .populate("contentsId.contentId");
+      .populate("contentsId.content");
 
     if (!allWatchListConent) {
       return next(new handlingError("no contents", 404));
     }
-    
+    let temp=[]
+
+  temp=allWatchListConent.contentsId.map((value)=>{
+    return {...value.toObject().content,isInWatchlist:true}
+  }) 
+   
     return res
       .status(200)
-      .json({ success: true, data: allWatchListConent.contentsId });
+      .json( {success: true, data:temp?.length?temp:[]});
   } catch (error) {
     return next(new handlingError("Internal Server Error", 500));
   }

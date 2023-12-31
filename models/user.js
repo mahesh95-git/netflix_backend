@@ -5,7 +5,7 @@ const Schema = mongoose.Schema;
 const jwt = require("jsonwebtoken");
 const userSchema = new Schema({
   firstName: { type: String, required: true },
-  lastName: { type: String,},
+  lastName: { type: String },
   avatar: [
     {
       url: {
@@ -13,8 +13,8 @@ const userSchema = new Schema({
         default:
           "https://res.cloudinary.com/dyjmwxfb4/image/upload/v1700720301/user-profile-icon-front-side-with-white-background_187299-40010_xglyal.avif",
       },
-      public_id:String
-    }
+      public_id: String,
+    },
   ],
   phone: {
     type: Number,
@@ -29,7 +29,18 @@ const userSchema = new Schema({
     validator: Validator.default.isEmail,
   },
   password: { type: String, required: true, minLength: 8 },
-  role: { type: String, default: "user", required: true },
+  role: {
+    type: String,
+    default: "user",
+    required: true,
+    enum: ["user", "admin"],
+  },
+  status: {
+    type: String,
+    default: "unBlock",
+    enum: ["unBlock", "Block"],
+    required: true,
+  },
 });
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {

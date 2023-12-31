@@ -17,7 +17,20 @@ const ContentSchema = Schema({
     maxlength: 4,
     required: [true, "Please provide a Year"],
   },
-  banner: [
+  banner: 
+    {
+      url: {
+        type: String,
+        required: true,
+      },
+      
+      public_id: {
+        type: String,
+        required: true,
+      },
+    },
+  
+  poster: 
     {
       url: {
         type: String,
@@ -28,81 +41,53 @@ const ContentSchema = Schema({
         required: true,
       },
     },
-  ],
-  poster: [
-    {
-      url: {
-        type: String,
-        required: true,
-      },
-      public_id: {
-        type: String,
-        required: true,
-      },
-    },
-  ],
-  languages: [
-    {
-      lnaguage: {
-        type: String,
-
-      },
-    },
-  ],
-  trailer: [
-    {
-      url: {
-        type: String,
-        required: true,
-      },
-      public_id: {
-        type: String,
-        required: true,
-      },
-    },
-  ],
-  fullMovie: [
-    {
-      url: {
-        type: String,
-        required: true,
-      },
-      public_id: {
-        type: String,
-        required: true,
-      },
-    },
-  ],
-  duration: {
-    type: Number,
-    required: [true, "Please provide movie duration "],
+  
+  languages: {
+    type:Array
   },
+  trailer: 
+    {
+      url: {
+        type: String,
+        required: true,
+      },
+      public_id: {
+        type: String,
+        required: true,
+      },
+    },
+  
+  fullMovie: 
+    {
+      url: {
+        type: String,
+        required: true,
+      },
+      public_id: {
+        type: String,
+        required: true,
+      },
+    },
+  
+  // duration: {
+  //   type: Number,
+  //   required: [true, "Please provide movie duration "],
+  // },
   type: {
     type: String,
     required: true,
   },
   director: {
     name: { type: String },
-    image: {
-      type: String,
-    },
+ 
   },
-  cast: [
-    {
-      name: {
-        type: String,
-        required: true,
-      },
-    },
-  ],
-  genres: [
-    {
-      genre: {
-        type: String,
-        required: true,
-      },
-    },
-  ],
+  cast:  {
+    type:Array
+  },
+  genres: {
+    type:Array
+  }
+  ,
   section: {
     type: String,
     required: [true, "Section is Required"],

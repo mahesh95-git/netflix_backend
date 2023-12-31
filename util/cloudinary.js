@@ -22,6 +22,7 @@ const uploadContentCloudinary = async (loclPath) => {
     }
     return responses;
   } catch (error) {
+    console.log(error)
     for (const key in loclPath) {
       for (let i = 0; i < loclPath[key].length; i++) {
         await fs.unlink(loclPath[key][i].path);

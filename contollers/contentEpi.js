@@ -3,7 +3,6 @@ const contentEpi = require("../models/contentEpi");
 const content = require("../models/content");
 const mongoose = require("mongoose");
 const { uploadContentCloudinary } = require("../util/cloudinary");
-const { find } = require("../models/user");
 exports.addContentEpi = async (req, res, next) => {
   let cloudinaryData = {};
   try {
@@ -70,8 +69,6 @@ exports.addContentEpi = async (req, res, next) => {
 
     return next(new handlingError(error.message, 500));
 
-    return next(new handlingError(error.message, 501));
-
   }
 };
 exports.getAllContentEpi = async (req, res, next) => {
@@ -80,11 +77,11 @@ exports.getAllContentEpi = async (req, res, next) => {
 
     const allEpi = await contentEpi
       .findOne({ contentId: req.params.id })
-      .select("-addedBy -contentId")
+      .select("-addedBy -contentId  -_id -_id -__v")
       .sort({ "allContent.episodeNumber": 1 });
     
 
-
+console.log(allEpi)
     if (!allEpi) {
       return next(
         new handlingError(
@@ -105,6 +102,7 @@ exports.getAllContentEpi = async (req, res, next) => {
 
 exports.getSingleContentEpi = async (req, res, next) => {
   try {
+    console.log(req.cookies)
     const temp = await contentEpi.findOne(
       { contentId: req.params.contentId },
       { addedBy: 0, contentId: 0 }

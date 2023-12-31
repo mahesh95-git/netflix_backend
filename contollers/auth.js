@@ -24,25 +24,27 @@ exports.signup = async (req, res, next) => {
       );
     }
     const toCheckUserisExist = await user.findOne({
-      $and: [{ email: req.body.email }, { phone: req.body.phone }],
+      $or: [{ email: req.body.email }, { phone: req.body.phone }],
     });
+
     if (toCheckUserisExist) {
-      return next(new handlingError("user already exist try again", 401));
+      return next(new handlingError("email or phone already exist try again ", 401));
     }
     let userInfo = {};
+    let avatar = [];
     if (Object.keys(req.files).length !== 0) {
       cloudinaryData = await uploadContentCloudinary(req.files);
-      userInfo = {
-        avatar: [
-          {
-            url: cloudinaryData[0].url,
-            public_id: cloudinaryData[0].public_id,
-          },
-        ],
-      };
+      avatar = [
+        {
+          url: cloudinaryData[0].url,
+          public_id: cloudinaryData[0].public_id,
+        },
+      ];
     }
+
     userInfo = {
       ...req.body,
+      avatar: avatar,
     };
 
     const newUser = await user.create(userInfo);
@@ -62,7 +64,7 @@ exports.signup = async (req, res, next) => {
       data: newUser,
     });
   } catch (error) {
-    console.log(error.message)
+    console.log(error.message);
     if (cloudinaryData.public_id) {
       await deleteContent(cloudinaryData.public_id);
     }
@@ -72,13 +74,9 @@ exports.signup = async (req, res, next) => {
 
 exports.login = async (req, res, next) => {
   try {
-    if (
-      [req.body.email, req.body.password].some((value) => value.length === 0)
-    ) {
-      return next(new handlingError("email or password is required", 401));
-    }
     const User = await user.findOne({ email: req.body.email });
 
+  
     if (!User) {
       return next(new handlingError("Invalid email or password", 403));
     }
@@ -97,8 +95,10 @@ exports.login = async (req, res, next) => {
     return res.cookie("loginToken", token, options).status(200).json({
       success: true,
       message: "successfully login ",
+      data: User,
     });
   } catch (error) {
+    console.log(error);
     return next(new handlingError("interal server error", 500));
   }
 };
@@ -110,12 +110,12 @@ exports.authiticatedUser = async (req, res, next) => {
     }
     const decoded = jwt.verify(req.cookies.loginToken, process.env.secretKey);
 
-    const loginUser = await user.findById(decoded.id);
+    const loginUser = await user.findById(decoded.id).select("-password");
     if (!loginUser) {
       return next(new handlingError("invalid token", 401));
     }
     req.User = loginUser;
-    next();
+    return next();
   } catch (error) {
     return next(new handlingError("Interanl Server Error", 500));
   }

@@ -2,7 +2,7 @@ const { handlingError } = require("../error/error");
 const user = require("../models/user");
 const { deleteContent } = require("../util/cloudinary");
 const { uploadContentCloudinary } = require("../util/cloudinary");
-exports.getUserInfo = async (req, res, next) => {
+exports.getUserInfoById = async (req, res, next) => {
   try {
     const loginUser = await user.findOne(
       { _id: req.params.id },
@@ -16,31 +16,40 @@ exports.getUserInfo = async (req, res, next) => {
     next(new handlingError("Internal Server Error", 500));
   }
 };
+
+exports.getUserInfo = (req, res, next) => {
+  res.status(200).json({ success: true, data: req.User });
+};
+
 exports.updateUserInfo = async (req, res, next) => {
   let cloudinaryData = {};
+
   try {
-    if (req.files) {
+    let userInfo = {};
+    if (Object.keys(req.files).length > 0) {
       cloudinaryData = await uploadContentCloudinary(req.files);
+
+      const User = await user.findOne({ _id: req.User._id });
+      if (User.avatar && User.avatar?.public_id) {
+        await deleteContent(User.avatar.public_id);
+      }
+      userInfo["avatar"] = {
+        public_id: cloudinaryData[0].public_id,
+        url: cloudinaryData[0].url,
+      };
     }
-    const userInfo = {
-      avatar: [
-        { url: cloudinaryData[0].url, public_id: cloudinaryData[0].public_id },
-      ],
+    userInfo = { ...userInfo, ...req.body };
+    const tempUser = await user
+      .findByIdAndUpdate(req.User.id, userInfo, {
+        new: true,
+      })
+      .select("-password");
 
-      ...req.body,
-    };
-
-    const tempUser = await user.findByIdAndUpdate(req.params.id, userInfo, {
-      new: false,
-    });
     if (!tempUser) {
       return next(new handlingError("Please enter a valid User Id", 401));
     }
-    if (Object.keys(cloudinaryData).length > 0) {
-      
-      await deleteContent(tempUser.avatar[0].public_id);
-    }
-    return res.status(201).json({ suceess: true, data: tempUser });
+
+    return res.status(201).json({ success: true, data: tempUser });
   } catch (error) {
     if (cloudinaryData.public_id) {
       await deleteContent(cloudinaryData.public_id);
@@ -68,7 +77,7 @@ exports.deleteUserAccount = async (req, res, next) => {
 exports.adminGetAllUsers = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
     const allUser = await user.find().skip(skip).limit(limit);
     if (!allUser) {
@@ -76,7 +85,7 @@ exports.adminGetAllUsers = async (req, res, next) => {
     }
     return res
       .status(201)
-      .json({ success: true, count: allUser.length, data: allUser });
+      .json({ success: true, total: allUser.length, data: allUser });
   } catch (err) {
     return next(new handlingError("Internal Server Error Try Again ", 500));
   }
@@ -93,5 +102,42 @@ exports.adminDeleteUser = async (req, res, next) => {
       .json({ success: true, message: "user has been deleted" });
   } catch (err) {
     return next(new handlingError("Internal Server Error Try Again ", 500));
+  }
+};
+
+exports.adminUpdateUser = async (req, res, next) => {
+  try {
+    const updateData = {};
+    for (const key in req.body) {
+      if (
+        key == "role" // Check if the key is not role or status
+      ) {
+        updateData[key] = req.body[key];
+      }
+    }
+    const allowedUpdates = ["role"];
+    const isValidOperation = Object.keys(req.body).every((update) =>
+      allowedUpdates.includes(update)
+    );
+    if (!isValidOperation) {
+      return next(new handlingError("Can only update user role ", 401));
+    }
+
+    const updatedUser = await user.findByIdAndUpdate(req.params.id, {
+      ...updateData,
+    });
+    console.log(updateData);
+    if (!updatedUser) {
+      return next(new handlingError("Invalid Id or No User Found", 401));
+    }
+
+    return res
+      .status(201)
+      .json({ success: true, message: "Profile Updated Successfully" });
+  } catch (error) {
+    console.log(error.message);
+    return next(
+      new handlingError("Internal Server Error. Please try again.", 500)
+    );
   }
 };

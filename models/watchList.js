@@ -10,7 +10,7 @@ const watchListSchema = Schema({
 
   contentsId: [
     {
-      contentId: {
+      content: {
         type: mongoose.Schema.ObjectId,
         required: true,
         ref: "content",

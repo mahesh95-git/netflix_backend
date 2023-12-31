@@ -1,21 +1,27 @@
 const { handlingError } = require("../error/error");
 const content = require("../models/content");
+const movieLists = require("../models/moviesListinSection");
+const fs = require("fs");
 const {
   uploadContentCloudinary,
   deleteContent,
 } = require("../util/cloudinary");
-const { default: mongoose } = require("mongoose");
+const user = require("../models/user");
+const watchList = require("../models/watchList");
+
 exports.addNewContent = async (req, res, next) => {
   try {
-    if (!req.files || !req.body.contentInfo) {
-      return next(
-        new handlingError("Missing files or content information", 404)
-      );
+    if (Object.keys(req.files).length < 4) {
+      return next(new handlingError("Missing files", 404));
     }
-    //upload file in cloudinary
-
-    const cloudinaryData = await uploadContentCloudinary(req.files);
-
+    for (const field in JSON.parse(req.body.contentInfo)) {
+      if (JSON.parse(req.body.contentInfo)[field] == "") {
+        for (const key in req.files) {
+          fs.unlinkSync(req.files[key][0].path);
+        }
+        return next(new handlingError(`${field} are required`, 500));
+      }
+    }
     const {
       title,
       description,
@@ -29,8 +35,9 @@ exports.addNewContent = async (req, res, next) => {
       cast,
     } = JSON.parse(req.body.contentInfo);
 
-    const contentToCreate = {};
+    const cloudinaryData = await uploadContentCloudinary(req.files);
 
+    const contentToCreate = {};
     cloudinaryData.forEach((value) => {
       contentToCreate[value.fieldname] = [
         {
@@ -39,7 +46,6 @@ exports.addNewContent = async (req, res, next) => {
         },
       ];
     });
-
     const newContent = await content.create({
       createBy: req.User._id,
       title: title,
@@ -54,6 +60,16 @@ exports.addNewContent = async (req, res, next) => {
       cast: cast,
       ...contentToCreate,
     });
+    const movies = await movieLists.find({ title: newContent.section });
+    if (movies) {
+      movies.content.push(newContent._id);
+      await movieLists.save();
+    } else {
+      await movieLists.create({
+        title: newContent.section,
+        content: [newContent._id],
+      });
+    }
     res.status(201).json({ message: "new Content added", data: newContent });
   } catch (error) {
     return next(new handlingError(error.message, 500));
@@ -117,7 +133,6 @@ exports.updateContent = async (req, res, next) => {
 exports.deleteContent = async (req, res, next) => {
   try {
     const Content = await content.findByIdAndDelete(req.params.id);
-
     if (!Content) {
       return next(new handlingError("please enter a valid id", 401));
     }
@@ -130,12 +145,25 @@ exports.deleteContent = async (req, res, next) => {
 };
 exports.getContent = async (req, res, next) => {
   try {
-    const Contents = await content.find({ _id: req.params.id });
+    let Contents = await content.findOne({ _id: req.params.id });
     if (!Contents) {
       return next(new handlingError("please enter a valid id", 401));
     }
+    const User = await watchList.findOne({ userId: req.User.id });
+    let isFound = false;
+    if (User.contentsId?.length) {
+      for (let i = 0; i < User.contentsId.length; i++) {
+        if (Contents._id.toString() === User.contentsId[i].content.toString()) {
+          isFound = true;
+          break;
+        }
+      }
+    }
+    Contents = { ...Contents.toObject(), isInWatchlist: isFound };
+
     res.status(200).json({ suceess: true, data: Contents });
   } catch (err) {
+    console.log(err.message);
     return next(
       new handlingError("Internal Server Error Try Again Later", 500)
     );
@@ -172,16 +200,29 @@ exports.getAllSectionViseContent = async (req, res, next) => {
 
 exports.getContentOverview = async (req, res, next) => {
   try {
-    const Content = await content.aggregate([
-      {
-        $match: {
-          type: req.query.type,
-        },
-      },
-      { $sample: { size: 10 } },
-    ]);
+    let aggregationPipeline = [];
+    if (req.query.type) {
+      aggregationPipeline = [
+        { $match: { type: req.query.type } },
+        { $sample: { size: 1 } },
+      ];
+    } else {
+      aggregationPipeline = [{ $sample: { size: 1 } }];
+    }
+    const Content = await content.aggregate(aggregationPipeline);
+    const User = await watchList.findOne({ userId: req.User.id });
 
-    return res.status(201).json({ sucess: true, Content });
+    if (User) {
+      for (let i = 0; i < User.contentsId.length; i++) {
+        if (
+          Content[0]._id.toString() === User.contentsId[0].content.toString()
+        ) {
+          Content[0] = { ...Content[0], isInWatchlist: true };
+          break;
+        }
+      }
+    }
+    return res.status(201).json({ success: true, data: Content[0] });
   } catch (error) {
     return next(
       new handlingError("Internal Server Error Try Again Later", 500)
@@ -200,20 +241,35 @@ exports.recommendationContent = async (req, res, next) => {
     if (!typeRecommended) {
       return res.status(404).json({ message: "Content not found" });
     }
-
-    const genres = typeRecommended.genres.map(
-      (genreObject) => genreObject.genre
-    );
     const type = typeRecommended.type;
     const recommendationContents = await content
       .find({
-        "genres.genre": { $in: genres },
+        genres: { $in: typeRecommended.genres },
         type: type,
       })
       .limit(20);
+    let updatedRecommendations = [];
+    const User = await watchList.findOne({ userId: req.User._id });
+    if (User) {
+      updatedRecommendations = recommendationContents.map((contentItem) => {
+        const isInWatchlist = User.contentsId.some((userContent) => {
+          return contentItem._id.toString() === userContent.content.toString();
+        });
+        return { ...contentItem.toObject(), isInWatchlist };
+      });
+    }
 
-    res.status(200).json({ suceess: true, data: recommendationContents });
+    res.status(200).json({
+      suceess: true,
+      data: {
+        title: "Recommendation",
+        movies: updatedRecommendations?.length
+          ? updatedRecommendations
+          : recommendationContents,
+      },
+    });
   } catch (error) {
+    console.log(error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -224,19 +280,19 @@ exports.searchContent = async (req, res, next) => {
     const page = parseInt(req.query.page) || 1; //
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-
+   
     const contents = await content
       .find({
         $or: [
           { title: { $regex: searchQuery, $options: "i" } },
           { description: { $regex: searchQuery, $options: "i" } },
-          { "genres.genre": { $regex: searchQuery, $options: "i" } },
+          { genres: { $regex: searchQuery, $options: "i" } },
         ],
       })
       .limit(limit)
       .skip(skip)
       .sort("createdAt");
-    return res.status(200).json({ success: true, data: contents });
+    return res.status(200).json({ success: true, data: contents,limit,page });
   } catch (error) {
     res.status(500).json({ message: "Internal Server Error" });
   }
@@ -263,3 +319,78 @@ exports.filterContent = async (req, res, next) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+exports.getAllList = async (req, res, next) => {
+  try {
+    let pageNumber = parseInt(req.query.page) || 1;
+    let limitPerPage = parseInt(req.query.limit) || 30;
+    let skip = (pageNumber - 1) * limitPerPage;
+    let type = {};
+    if (req.query.type) {
+      type = { type: req.query.type };
+    }
+    const Content = await movieLists
+      .find(type)
+      .skip(skip)
+      .limit(limitPerPage)
+      .populate("movies.movie")
+      .sort({ createdAt: 1 });
+    const User = await watchList.findOne({ userId: req.User._id });
+    let sample = [];
+    if (User && User.contentsId?.length) {
+      for (let i = 0; i < Content.length; i++) {
+        let movieObj = [];
+        for (let j = 0; j < Content[i].movies.length; j++) {
+          let found = false;
+          for (let k = 0; k < User.contentsId.length; k++) {
+            if (
+              Content[i].movies[j].movie._id.toString() ===
+              User.contentsId[k].content.toString()
+            ) {
+              found = true;
+              break;
+            }
+          }
+          movieObj.push({
+            movie: {
+              ...Content[i].movies[j].movie.toObject(),
+              isInWatchlist: found,
+            },
+          });
+        }
+
+        sample.push({
+          title: Content[i].title,
+          type: Content[i].type,
+          movies: movieObj,
+          _id:Content[i]._id
+        });
+      }
+    }
+    return res.status(200).json({
+      success: true,
+      pageNumber: pageNumber,
+      limitPerPage: limitPerPage,
+      data: sample?.length ? sample : Content,
+    });
+  } catch (error) {
+    return next(
+      new handlingError("Internal Server Error. Try Again Later", 500)
+    );
+  }
+};
+
+
+exports.getSingleMovieList=async(req,res,next)=>{
+  try{
+    const id=req.params.id;
+const movieList=await movieLists.findOne({_id:id}).populate("movies.movie").select("-type -createAt ")
+
+if(!movieList){
+  return next(new handlingError('The Movie List Does Not Exist',404))
+}
+res.status(200).json({success:true,data:movieList})
+}catch(error){
+  return next(new handlingError('Server error occured',500))
+}
+}

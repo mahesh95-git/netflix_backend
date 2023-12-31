@@ -7,7 +7,7 @@ const {
 const { authiticatedUser, checkAdminUser } = require("../contollers/auth");
 
 const router = require("express").Router();
-router.route("/genres-languages").get(getAllGenreOrLanguage);
+router.route("/genres-languages").get(authiticatedUser,getAllGenreOrLanguage);
 router
   .route("/admin/genres-languages")
   .post(authiticatedUser, checkAdminUser, addGenreOrLanguage);

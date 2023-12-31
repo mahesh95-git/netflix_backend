@@ -5,11 +5,15 @@ class handlingError extends Error {
   }
 }
 const errorHandler = (error, req, res, next) => {
-  error.statusCode || 500
-  error.massage || "internal server error"
-  if(error.statusCode===11000){
-return res.status(409).json({success:false,message:'already exist'})
+
+  if (error.statusCode === 11000) {
+
+    return res.status(409).json({ success: false, message: "already exist" });
   }
- res.status(res.statusCode).json({success:false,massage:error.message})
+  if (error) {
+    return res
+      .status(res.statusCode)
+      .json({ success: false, message: error.message });
+  }
 };
-module.exports = {handlingError,errorHandler};
+module.exports = { handlingError, errorHandler };
