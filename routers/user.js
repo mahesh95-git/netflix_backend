@@ -21,17 +21,17 @@ router
   .get(authiticatedUser, checkAdminUser, getUserInfoById);
 router.route("/user").get(authiticatedUser, getUserInfo);
 router
-  .route("/user/:id/update")
+  .route("/user/update")
   .patch(
     authiticatedUser,
     upload.fields([{ name: "avatar", maxCount: 1 }]),
     updateUserInfo
   );
 router.route("/user/:id/delete").delete(authiticatedUser, deleteUserAccount);
-router.route("/auth/forgot-password").post(authiticatedUser, forgotPassword);
+router.route("/auth/forgot-password").post(forgotPassword);
 router
   .route("/auth/forgot-password/:token")
-  .patch(authiticatedUser, changePasswrod);
+  .patch( changePasswrod);
 router
   .route("/admin/All-user")
   .get(authiticatedUser, checkAdminUser, adminGetAllUsers);

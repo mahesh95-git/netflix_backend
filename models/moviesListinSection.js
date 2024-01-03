@@ -9,9 +9,9 @@ const movieListingSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  movies: [
+ contents: [
    {
-    movie:{ type: mongoose.Schema.ObjectId, ref: "content", required: true },
+    content:{ type: mongoose.Schema.ObjectId, ref: "content", required: true },
    }
   ],
   createAt:{

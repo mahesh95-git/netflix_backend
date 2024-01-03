@@ -13,7 +13,7 @@ exports.addWatchHistory = async (req, res, next) => {
       // If no history exists for the user, create a new history record
       await History.create({
         userId: req.User._id,
-        activity: [
+        contents: [
           {
             content: contentId,
             duration: duration,
@@ -22,12 +22,12 @@ exports.addWatchHistory = async (req, res, next) => {
       });
       return res.status(201).json({ success: true, message: "History saved" });
     } else {
-      // If history exists, update the activity
+      // If history exists, update the contents
       let isInList = false;
-      for (let i = 0; i < userHistory.activity.length; i++) {
-        if (userHistory.activity[i].content == contentId) {
-          userHistory.activity.splice(i, 1);
-          userHistory.activity.push({
+      for (let i = 0; i < userHistory.contents.length; i++) {
+        if (userHistory.contents[i].content == contentId) {
+          userHistory.contents.splice(i, 1);
+          userHistory.contents.push({
             content: contentId,
             duration: duration,
           });
@@ -35,7 +35,7 @@ exports.addWatchHistory = async (req, res, next) => {
         }
       }
       if (!isInList) {
-        userHistory.activity.push({
+        userHistory.contents.push({
           content: contentId,
           duration: duration,
         });
@@ -59,8 +59,8 @@ exports.deleteSingleHistoryContent = async (req, res, next) => {
     if (!History) {
       return next(new handlingError("history not found", 400));
     }
-    const index = History.activity.indexOf(
-      History.activity.filter(
+    const index = History.contents.indexOf(
+      History.contents.filter(
         (item) => item.content.toString() === req.params.id
       )[0]
     );
@@ -68,7 +68,7 @@ exports.deleteSingleHistoryContent = async (req, res, next) => {
     if (index == -1) {
       return next(new handlingError(`No such Content ID in History`, 400));
     }
-    History.activity.splice(index, 1);
+    History.contents.splice(index, 1);
     await History.save();
     return res
       .status(200)
@@ -93,7 +93,7 @@ exports.deleteAllContentHistory = async (req, res, next) => {
 
 exports.getAllWatchHistory=async(req,res,next)=>{
     try{
-        const watchHistory=await history.findOne({userId:req.User._id}).populate("activity.content")
+        const watchHistory=await history.findOne({userId:req.User._id}).populate("contents.content")
            if(!watchHistory){
             return next(new handlingError('this user has no watching record',400))
            }

@@ -8,6 +8,7 @@ const {
 } = require("../util/cloudinary");
 const user = require("../models/user");
 const watchList = require("../models/watchList");
+const history =require("../models/history")
 
 exports.addNewContent = async (req, res, next) => {
   try {
@@ -280,7 +281,7 @@ exports.searchContent = async (req, res, next) => {
     const page = parseInt(req.query.page) || 1; //
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-   
+
     const contents = await content
       .find({
         $or: [
@@ -292,7 +293,7 @@ exports.searchContent = async (req, res, next) => {
       .limit(limit)
       .skip(skip)
       .sort("createdAt");
-    return res.status(200).json({ success: true, data: contents,limit,page });
+    return res.status(200).json({ success: true, data: contents, limit, page });
   } catch (error) {
     res.status(500).json({ message: "Internal Server Error" });
   }
@@ -333,18 +334,18 @@ exports.getAllList = async (req, res, next) => {
       .find(type)
       .skip(skip)
       .limit(limitPerPage)
-      .populate("movies.movie")
+      .populate("contents.content")
       .sort({ createdAt: 1 });
     const User = await watchList.findOne({ userId: req.User._id });
     let sample = [];
     if (User && User.contentsId?.length) {
       for (let i = 0; i < Content.length; i++) {
         let movieObj = [];
-        for (let j = 0; j < Content[i].movies.length; j++) {
+        for (let j = 0; j < Content[i].contents.length; j++) {
           let found = false;
           for (let k = 0; k < User.contentsId.length; k++) {
             if (
-              Content[i].movies[j].movie._id.toString() ===
+              Content[i].contents[j].content._id.toString() ===
               User.contentsId[k].content.toString()
             ) {
               found = true;
@@ -352,8 +353,8 @@ exports.getAllList = async (req, res, next) => {
             }
           }
           movieObj.push({
-            movie: {
-              ...Content[i].movies[j].movie.toObject(),
+            content: {
+              ...Content[i].contents[j].content.toObject(),
               isInWatchlist: found,
             },
           });
@@ -362,8 +363,8 @@ exports.getAllList = async (req, res, next) => {
         sample.push({
           title: Content[i].title,
           type: Content[i].type,
-          movies: movieObj,
-          _id:Content[i]._id
+          contents: movieObj,
+          _id: Content[i]._id,
         });
       }
     }
@@ -374,23 +375,40 @@ exports.getAllList = async (req, res, next) => {
       data: sample?.length ? sample : Content,
     });
   } catch (error) {
+    console.log(error.message);
     return next(
       new handlingError("Internal Server Error. Try Again Later", 500)
     );
-  }
+}
 };
 
+exports.getSingleMovieList = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const type = req.params.type;
+    if (type === "watchhistory") {
+      const watchHistory = await history
+        .findOne({ userId: id })
+        .populate("contents.content");
+      if (!watchHistory) {
+        return next(new handlingError("history not found", 404));
+      }
+      res.status(200).json({ success: true, data: watchHistory });
+    }
+    if (type === "contents") {
+      const movieList = await movieLists
+        .findOne({ _id: id })
+        .populate("contents.content")
+        .select("-type -createAt ");
 
-exports.getSingleMovieList=async(req,res,next)=>{
-  try{
-    const id=req.params.id;
-const movieList=await movieLists.findOne({_id:id}).populate("movies.movie").select("-type -createAt ")
-
-if(!movieList){
-  return next(new handlingError('The Movie List Does Not Exist',404))
-}
-res.status(200).json({success:true,data:movieList})
-}catch(error){
-  return next(new handlingError('Server error occured',500))
-}
-}
+      if (!movieList) {
+        return next(new handlingError("The Movie List Does Not Exist", 404));
+      }
+      console.log(movieList)
+      res.status(200).json({ success: true, data: movieList });
+    }
+  } catch (error) {
+    console.log(error.message)
+    return next(new handlingError("Server error occured", 500));
+  }
+};

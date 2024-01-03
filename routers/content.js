@@ -27,7 +27,7 @@ router
   .route("/admin/content/:id/delete")
   .delete(authiticatedUser, checkAdminUser, deleteContent);
 router.route("/content/:id").get(authiticatedUser,getContent);
-router.route("/contentview/:id").get(authiticatedUser,getSingleMovieList);
+router.route("/contentview/:id/:type").get(authiticatedUser,getSingleMovieList);
 // router.route("/content").get(getAllSectionViseContent);
 router.route("/content").get(authiticatedUser,getAllList)
 router.route("/contentOverview").get(authiticatedUser,getContentOverview);

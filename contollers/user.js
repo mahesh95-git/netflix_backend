@@ -49,7 +49,7 @@ exports.updateUserInfo = async (req, res, next) => {
       return next(new handlingError("Please enter a valid User Id", 401));
     }
 
-    return res.status(201).json({ success: true, data: tempUser });
+    return res.status(201).json({ success: true, data: tempUser,message:'profile successfully update' });
   } catch (error) {
     if (cloudinaryData.public_id) {
       await deleteContent(cloudinaryData.public_id);

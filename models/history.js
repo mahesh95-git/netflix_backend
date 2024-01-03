@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const historySchema = Schema({
   userId: { type: mongoose.Types.ObjectId },
-  activity: [
+contents: [
     {
       content: { type: mongoose.Types.ObjectId,
         ref:"content"

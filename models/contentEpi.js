@@ -6,7 +6,7 @@ const contentEpiSchema = Schema({
     required: true,
     unique: true,
   },
-  contentId: {
+  content: {
     type: mongoose.Schema.ObjectId,
     required: true,
     unique: true,

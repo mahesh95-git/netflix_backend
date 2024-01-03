@@ -6,14 +6,11 @@ class handlingError extends Error {
 }
 const errorHandler = (error, req, res, next) => {
 
-  if (error.statusCode === 11000) {
-
-    return res.status(409).json({ success: false, message: "already exist" });
-  }
   if (error) {
+    console.log(error.message)
     return res
-      .status(res.statusCode)
-      .json({ success: false, message: error.message });
+      .status(error.statusCode)
+      .json({ success: false, message:error.message});
   }
 };
 module.exports = { handlingError, errorHandler };

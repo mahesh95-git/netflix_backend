@@ -64,7 +64,6 @@ exports.signup = async (req, res, next) => {
       data: newUser,
     });
   } catch (error) {
-    console.log(error.message);
     if (cloudinaryData.public_id) {
       await deleteContent(cloudinaryData.public_id);
     }
@@ -138,21 +137,17 @@ exports.logout = (req, res, next) => {
 
 exports.resetPassword = async (req, res, next) => {
   try {
+    const resetPass = await user.findById(req.User._id);
+    const temp = await bcrpyt.compare(req.body.oldPassword, resetPass.password);
+
+    if (!temp) {
+      return next(
+        new handlingError("please enter valid old password", 401)
+      );
+    }
+    
     if (req.body.newPassword != req.body.confirmPassword) {
       return next(new handlingError("passwords are not match", 400));
-    }
-
-    const resetPass = await user.findById(req.User._id);
-
-    if (!resetPass) {
-      return next(new handlingError("Invalid Token", 403));
-    }
-    const temp = await bcrpyt.compare(req.body.newPassword, resetPass.password);
-
-    if (temp) {
-      return next(
-        new handlingError("please enter another this passowrd already use", 401)
-      );
     }
 
     resetPass.password = req.body.newPassword;
@@ -173,7 +168,7 @@ exports.forgotPassword = async (req, res, next) => {
     }
 
     const token = jwt.sign({ _id: emailExist._id }, process.env.secretKey, {
-      expiresIn: process.env.jWT_TOKENEXPIRES,
+      expiresIn: process.env.jWT_TOKENEXPIRES*60,
     });
     const options = {
       host: process.env.SMPT_HOST,
@@ -187,7 +182,7 @@ exports.forgotPassword = async (req, res, next) => {
 
     const transporter = nodemailer.createTransport(options);
 
-    const URL = `${process.env.PROTOCALL}://${process.env.HOSTNAME}:${process.env.PORTNO}/api/auth/forgot-password/${token}`;
+    const URL = `${process.env.PROTOCALL}://${process.env.HOSTNAME}:${process.env.PORTNO}/forgotpassword/${token}`;
 
     async function main() {
       const info = await transporter.sendMail({
@@ -200,6 +195,7 @@ exports.forgotPassword = async (req, res, next) => {
     main().catch(console.error);
     return res.status(201).json({ success: true, message: "check your email" });
   } catch (err) {
+  
     return next(new handlingError("Internal Server Error", 500));
   }
 };
@@ -212,6 +208,9 @@ exports.changePasswrod = async (req, res, next) => {
 
     if (!User) {
       return next(new handlingError("Token Expired", 403));
+    }
+    if(!req.body.newPassword || !req.body.confirmPassword){
+      return next(new handlingError('Please fill all fields', 400))
     }
     if (req.body.newPassword != req.body.confirmPassword) {
       return next(new handlingError("passwords are not match", 400));
