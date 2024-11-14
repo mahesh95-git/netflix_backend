@@ -151,8 +151,10 @@ exports.getContent = async (req, res, next) => {
       return next(new handlingError("please enter a valid id", 401));
     }
     const User = await watchList.findOne({ userId: req.User.id });
+  
     let isFound = false;
-    if (User.contentsId?.length) {
+    if (User) {
+     
       for (let i = 0; i < User.contentsId.length; i++) {
         if (Contents._id.toString() === User.contentsId[i].content.toString()) {
           isFound = true;

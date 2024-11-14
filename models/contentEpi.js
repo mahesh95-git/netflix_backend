@@ -4,12 +4,12 @@ const contentEpiSchema = Schema({
   addedBy: {
     type: mongoose.Schema.ObjectId,
     required: true,
-    unique: true,
+  
   },
   content: {
     type: mongoose.Schema.ObjectId,
     required: true,
-    unique: true,
+  
   },
   allContents: [
     {

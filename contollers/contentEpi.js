@@ -66,21 +66,15 @@ exports.addContentEpi = async (req, res, next) => {
       .status(201)
       .json({ suceess: true, message: "successfully added" });
   } catch (error) {
-
     return next(new handlingError(error.message, 500));
-
   }
 };
 exports.getAllContentEpi = async (req, res, next) => {
   try {
-    const contentId = new mongoose.Types.ObjectId(req.params.id);
-
     const allEpi = await contentEpi
-      .findOne({ contentId: req.params.id })
-      .select("-addedBy -contentId  -_id -_id -__v")
+      .findOne({ content: req.params.id })
+      .select("-addedBy  -_id -__v")
       .sort({ "allContent.episodeNumber": 1 });
-    
-
 console.log(allEpi)
     if (!allEpi) {
       return next(
@@ -91,18 +85,15 @@ console.log(allEpi)
       );
     }
 
-
     return res.status(201).json({ suceess: true, data: allEpi });
   } catch (error) {
-
-
     return next(new handlingError("interanl server error", 500));
   }
 };
 
 exports.getSingleContentEpi = async (req, res, next) => {
   try {
-    console.log(req.cookies)
+    console.log(req.cookies);
     const temp = await contentEpi.findOne(
       { contentId: req.params.contentId },
       { addedBy: 0, contentId: 0 }
@@ -122,9 +113,7 @@ exports.getSingleContentEpi = async (req, res, next) => {
     }
 
     return res.status(201).json({ sucess: true, data: episode });
-  } catch (error) {
-
-  }
+  } catch (error) {}
 };
 
 exports.updateContentEpi = async (req, res, next) => {
@@ -146,7 +135,7 @@ exports.updateContentEpi = async (req, res, next) => {
     for (let key in req.body) {
       updateFields[`allContents.$.${key}`] = req.body[key];
     }
-   
+
     const updatedEpisode = await contentEpi.findOneAndUpdate(
       {
         contentId: req.params.contentId,

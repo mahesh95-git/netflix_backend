@@ -64,6 +64,7 @@ exports.signup = async (req, res, next) => {
       data: newUser,
     });
   } catch (error) {
+    console.log(error.message)
     if (cloudinaryData.public_id) {
       await deleteContent(cloudinaryData.public_id);
     }
@@ -104,6 +105,7 @@ exports.login = async (req, res, next) => {
 
 exports.authiticatedUser = async (req, res, next) => {
   try {
+    
     if (!req.cookies.loginToken) {
       return next(new handlingError("please login ", 401));
     }
